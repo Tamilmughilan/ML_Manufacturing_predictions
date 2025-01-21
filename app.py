@@ -1,3 +1,7 @@
+'''
+Author : Tamil mughilan
+Predictive Analysis for Manufacturing Operations
+'''
 import os
 import pandas as pd
 import pickle
@@ -11,7 +15,7 @@ app = Flask(__name__)
 DATA_FILE = "manufacturing_data.csv"
 MODEL_FILE = "model.pkl"
 
-# Endpoint to upload CSV file
+#uploading
 @app.route('/upload', methods=['POST'])
 def upload_file():
     print(f"Request Path: {request.path}")
@@ -22,28 +26,26 @@ def upload_file():
     else:
         return jsonify({"error": "Invalid file format"}), 400
 
-# Endpoint to train the model
+#training
 @app.route('/train', methods=['POST'])
 def train_model():
     try:
         df = pd.read_csv(DATA_FILE)
 
-        # Selecting relevant features and target variable
         X = df[['Air temperature [K]', 'Process temperature [K]', 'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]']]
-        y = df['Machine failure']  # Predicting machine failure (0 or 1)
-
-        # Splitting data into train and test sets
+        y = df['Machine failure'] 
+        # Splitting data into train and test.
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        # Train the model
+        # Training the model
         model = DecisionTreeClassifier()
         model.fit(X_train, y_train)
 
-        # Save the trained model
+        # Saving the model
         with open(MODEL_FILE, 'wb') as f:
             pickle.dump(model, f)
 
-        # Evaluate the model
+        # Evaluate
         y_pred = model.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
         f1 = f1_score(y_test, y_pred)
@@ -57,7 +59,7 @@ def train_model():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Endpoint to make predictions
+#Predictions
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -67,7 +69,7 @@ def predict():
         if not all(field in data for field in required_fields):
             return jsonify({"error": "Missing required input fields"}), 400
 
-        # Prepare input data for prediction
+      
         input_data = [[
             data['Air temperature [K]'],
             data['Process temperature [K]'],
@@ -76,7 +78,6 @@ def predict():
             data['Tool wear [min]']
         ]]
 
-        # Load the trained model
         with open(MODEL_FILE, 'rb') as f:
             model = pickle.load(f)
 
